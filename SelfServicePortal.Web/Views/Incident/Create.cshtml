@@ -4,8 +4,8 @@
 }
 
 <div class="container-fluid mt-4">
-    <div class="card">
-        <div class="card-header">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
             <h5 class="card-title mb-0">Log New Incident</h5>
         </div>
         <div class="card-body">
@@ -17,14 +17,14 @@
                         <label asp-for="CallType" class="form-label"></label>
                         <select asp-for="CallType" class="form-select">
                             <option value="">Select Call Type</option>
-                            <option value="BUG">BUG: System function bugs</option>
-                            <option value="Change Request">Change Request: system function new changes</option>
+                            <option value="Bug">BUG: System function bugs</option>
+                            <option value="ChangeRequest">Change Request: system function new changes</option>
                             <option value="Clarification">Clarification: user is asking for clarification</option>
-                            <option value="Data Correction">Data Correction: Data needs to be corrected</option>
-                            <option value="Enhancements">Enhancements: new suggested enhancements</option>
-                            <option value="Reports">Reports: New/modify Reports</option>
+                            <option value="DataCorrection">Data Correction: Data needs to be corrected</option>
+                            <option value="Enhancement">Enhancements: new suggested enhancements</option>
+                            <option value="Report">Reports: New/modify Reports</option>
                             <option value="Performance">Performance: system performance related issues</option>
-                            <option value="User Access">User Access: user authority and access rights</option>
+                            <option value="UserAccess">User Access: user authority and access rights</option>
                         </select>
                         <span asp-validation-for="CallType" class="text-danger"></span>
                     </div>
@@ -36,7 +36,7 @@
                             <option value="Finance">Finance</option>
                             <option value="Purchase">Purchase</option>
                             <option value="Stock">Stock</option>
-                            <option value="Sales/CRM">Sales/CRM</option>
+                            <option value="SalesCRM">Sales/CRM</option>
                             <option value="Service">Service</option>
                             <option value="HRMS">HRMS</option>
                             <option value="MyLog">MyLog</option>
@@ -48,7 +48,7 @@
                         <label asp-for="Priority" class="form-label"></label>
                         <select asp-for="Priority" class="form-select">
                             <option value="">Select Priority</option>
-                            <option value="Show Stopper">Show Stopper</option>
+                            <option value="Showstopper">Show Stopper</option>
                             <option value="High">High</option>
                             <option value="Medium">Medium</option>
                             <option value="Low">Low</option>
@@ -60,7 +60,7 @@
                 <div class="row mb-3">
                     <div class="col-md-8">
                         <label asp-for="UrlFormName" class="form-label"></label>
-                        <input asp-for="UrlFormName" class="form-control" />
+                        <input asp-for="UrlFormName" class="form-control" placeholder="Enter the screen name or URL" />
                         <span asp-validation-for="UrlFormName" class="text-danger"></span>
                     </div>
                     <div class="col-md-4">
@@ -80,29 +80,29 @@
 
                 <div class="mb-3">
                     <label asp-for="Subject" class="form-label"></label>
-                    <input asp-for="Subject" class="form-control" />
+                    <input asp-for="Subject" class="form-control" placeholder="Enter a brief subject for the incident" />
                     <span asp-validation-for="Subject" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label asp-for="Description" class="form-label"></label>
-                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <textarea asp-for="Description" class="form-control" rows="4" placeholder="Enter detailed incident description"></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label asp-for="Suggestion" class="form-label"></label>
-                    <textarea asp-for="Suggestion" class="form-control" rows="3"></textarea>
+                    <textarea asp-for="Suggestion" class="form-control" rows="3" placeholder="Enter your suggestions (optional)"></textarea>
                     <span asp-validation-for="Suggestion" class="text-danger"></span>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Attachments" class="form-label">Attachments</label>
-                    <input type="file" asp-for="Attachments" class="form-control" multiple />
-                </div>
+                @await Component.InvokeAsync("AttachmentUpload")
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div class="text-end mt-4">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Submit Incident
+                    </button>
                 </div>
             </form>
         </div>
@@ -124,6 +124,29 @@
             if ($('#isRecurring').is(':checked')) {
                 $('#recurringCallSection').show();
             }
+
+            // File upload handling
+            $('#fileInput').change(function() {
+                const files = this.files;
+                const fileInfo = $('#fileInfo');
+                const fileList = $('#fileList');
+                const fileCount = $('#fileCount');
+
+                if (files.length > 0) {
+                    fileInfo.removeClass('d-none');
+                    fileCount.text(files.length);
+                    fileList.empty();
+
+                    Array.from(files).forEach(file => {
+                        const li = $('<li>')
+                            .addClass('text-truncate')
+                            .html(`<i class="bi bi-file-earmark"></i> ${file.name} <small class="text-muted">(${(file.size / 1024).toFixed(1)} KB)</small>`);
+                        fileList.append(li);
+                    });
+                } else {
+                    fileInfo.addClass('d-none');
+                }
+            });
         });
     </script>
 }

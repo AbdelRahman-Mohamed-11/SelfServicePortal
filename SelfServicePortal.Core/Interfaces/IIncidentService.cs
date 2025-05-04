@@ -4,6 +4,6 @@ public interface IIncidentService
 {
     Task<Incident> CreateIncidentAsync(Incident incident);
     Task<IEnumerable<Incident>> GetRecurringIncidentsAsync();
-    public async Task AddAttachmentAsync(IncidentAttachment attachment)
+    public Task AddAttachmentAsync(IncidentAttachment attachment);
 
 }

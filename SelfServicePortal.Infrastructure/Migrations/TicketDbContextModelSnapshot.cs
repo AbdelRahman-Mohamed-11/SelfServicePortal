@@ -307,7 +307,7 @@ namespace SelfServicePortal.Infrastructure.Migrations
 
                     b.HasIndex("RecurringCallId");
 
-                    b.ToTable("Incidents");
+                    b.ToTable("Incidents", (string)null);
                 });
 
             modelBuilder.Entity("SelfServicePortal.Core.Entities.IncidentAttachment", b =>
@@ -342,7 +342,7 @@ namespace SelfServicePortal.Infrastructure.Migrations
 
                     b.HasIndex("UploaderId");
 
-                    b.ToTable("IncidentAttachments");
+                    b.ToTable("IncidentAttachments", (string)null);
                 });
 
             modelBuilder.Entity("SelfServicePortal.Core.Entities.IncidentComment", b =>
@@ -374,7 +374,7 @@ namespace SelfServicePortal.Infrastructure.Migrations
 
                     b.HasIndex("IncidentId");
 
-                    b.ToTable("IncidentComments");
+                    b.ToTable("IncidentComments", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

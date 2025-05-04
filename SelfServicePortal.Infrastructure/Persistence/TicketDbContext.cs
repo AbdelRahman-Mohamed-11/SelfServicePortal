@@ -14,6 +14,7 @@ namespace SelfServicePortal.Infrastructure.Persistence
         public DbSet<IncidentComment> IncidentComments { get; set; }
         public DbSet<IncidentAttachment> IncidentAttachments { get; set; }
 
+   
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

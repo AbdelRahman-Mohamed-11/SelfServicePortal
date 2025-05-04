@@ -8,5 +8,5 @@ public interface ITicketDbContext
     DbSet<IncidentComment> IncidentComments { get; }
     DbSet<IncidentAttachment> IncidentAttachments { get; }
 
-    Task<int> SaveChangesAsync();
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,41 @@
+@model string
+
+<div class="mb-3">
+    <label class="form-label">Attachments</label>
+    <div class="custom-file-upload">
+        <input type="file" name="Attachments" class="form-control" multiple accept="@Model" id="fileInput" />
+        <div class="file-upload-info mt-2 d-none" id="fileInfo">
+            <div class="alert alert-info">
+                <i class="bi bi-paperclip"></i> <span id="fileCount">0</span> files selected
+                <ul id="fileList" class="list-unstyled mt-2 mb-0"></ul>
+            </div>
+        </div>
+    </div>
+    <small class="text-muted">Supported formats: Images (.jpg, .jpeg, .png), Documents (.pdf, .doc, .docx)</small>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#fileInput').change(function() {
+            const files = this.files;
+            const fileInfo = $('#fileInfo');
+            const fileList = $('#fileList');
+            const fileCount = $('#fileCount');
+
+            if (files.length > 0) {
+                fileInfo.removeClass('d-none');
+                fileCount.text(files.length);
+                fileList.empty();
+
+                Array.from(files).forEach(file => {
+                    const li = $('<li>')
+                        .addClass('text-truncate')
+                        .html(`<i class="bi bi-file-earmark"></i> ${file.name} <small class="text-muted">(${(file.size / 1024).toFixed(1)} KB)</small>`);
+                    fileList.append(li);
+                });
+            } else {
+                fileInfo.addClass('d-none');
+            }
+        });
+    });
+</script>

@@ -21,7 +21,7 @@ namespace SelfServicePortal.Infrastructure.Services
             string roleName = nameof(Role.User);
             if (!await roleManager.RoleExistsAsync(roleName))
             {
-                await roleManager.CreateAsync(new ApplicationRole { Name = roleName });
+                await roleManager.CreateAsync(new ApplicationRole { Name = roleName , Description = "Normal User" });
             }
             var result = await userManager.CreateAsync(user, password);
             if (result.Succeeded)
