@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TicketingSystem.Core.Entities.Identity;
+using SelfServicePortal.Core.Entities.Identity;
 
-namespace TicketingSystem.Infrastructure.Persistence.Configurations
+namespace SelfServicePortal.Infrastructure.Persistence.Configurations
 {
     public class ApplicationRoleConfiguration : IEntityTypeConfiguration<ApplicationRole>
     {

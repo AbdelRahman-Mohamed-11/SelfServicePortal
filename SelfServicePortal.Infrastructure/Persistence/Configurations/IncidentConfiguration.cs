@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TicketingSystem.Core.Entities;
-using TicketingSystem.Core.Entities.Identity.Enums;
+using SelfServicePortal.Core.Entities;
 
-namespace TicketingSystem.Infrastructure.Persistence.Configurations;
+namespace SelfServicePortal.Infrastructure.Persistence.Configurations;
 
 public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 {

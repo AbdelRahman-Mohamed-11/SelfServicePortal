@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using TicketingSystem.Core.Entities;
-using TicketingSystem.Core.Entities.Identity;
-using TicketingSystem.Core.Interfaces;
-using TicketingSystem.Infrastructure.Persistence.Configurations;
+using SelfServicePortal.Core.Entities;
+using SelfServicePortal.Core.Entities.Identity;
+using SelfServicePortal.Core.Interfaces;
+using SelfServicePortal.Infrastructure.Persistence.Configurations;
 
-namespace TicketingSystem.Infrastructure.Persistence
+namespace SelfServicePortal.Infrastructure.Persistence
 {
     public class TicketDbContext(DbContextOptions options)
                 : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options), ITicketDbContext
@@ -18,12 +17,8 @@ namespace TicketingSystem.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
             builder.ApplyConfigurationsFromAssembly(typeof(ApplicationRoleConfiguration).Assembly);
-
-            builder.Ignore<IdentityUserLogin<Guid>>();
-            builder.Ignore<IdentityUserToken<Guid>>();
-
-
         }
     }
 }

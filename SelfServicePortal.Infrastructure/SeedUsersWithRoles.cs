@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using TicketingSystem.Core.Entities.Identity;
-using TicketingSystem.Core.Entities.Identity.Enums;
+using SelfServicePortal.Core.Entities.Identity;
+using SelfServicePortal.Core.Entities.Identity.Enums;
 
-namespace TicketingSystem.Infrastructure
+namespace SelfServicePortal.Infrastructure
 {
     public static class SeedUsersWithRoles
     {

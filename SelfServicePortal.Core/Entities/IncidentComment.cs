@@ -1,6 +1,6 @@
-﻿using TicketingSystem.Core.Entities.Identity;
+﻿using SelfServicePortal.Core.Entities.Identity;
 
-namespace TicketingSystem.Core.Entities;
+namespace SelfServicePortal.Core.Entities;
 
 public class IncidentComment(Guid incidentId, string text, Guid creatorId)
 {

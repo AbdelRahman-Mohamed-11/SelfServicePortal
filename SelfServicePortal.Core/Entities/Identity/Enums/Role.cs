@@ -1,4 +1,4 @@
-﻿namespace TicketingSystem.Core.Entities.Identity.Enums;
+﻿namespace SelfServicePortal.Core.Entities.Identity.Enums;
 
 public enum Role
 {

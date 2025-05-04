@@ -1,0 +1,129 @@
+@model CreateIncidentViewModel
+@{
+    ViewData["Title"] = "Log New Incident";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Log New Incident</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="CallType" class="form-label"></label>
+                        <select asp-for="CallType" class="form-select">
+                            <option value="">Select Call Type</option>
+                            <option value="BUG">BUG: System function bugs</option>
+                            <option value="Change Request">Change Request: system function new changes</option>
+                            <option value="Clarification">Clarification: user is asking for clarification</option>
+                            <option value="Data Correction">Data Correction: Data needs to be corrected</option>
+                            <option value="Enhancements">Enhancements: new suggested enhancements</option>
+                            <option value="Reports">Reports: New/modify Reports</option>
+                            <option value="Performance">Performance: system performance related issues</option>
+                            <option value="User Access">User Access: user authority and access rights</option>
+                        </select>
+                        <span asp-validation-for="CallType" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Module" class="form-label"></label>
+                        <select asp-for="Module" class="form-select">
+                            <option value="">Select Module</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Purchase">Purchase</option>
+                            <option value="Stock">Stock</option>
+                            <option value="Sales/CRM">Sales/CRM</option>
+                            <option value="Service">Service</option>
+                            <option value="HRMS">HRMS</option>
+                            <option value="MyLog">MyLog</option>
+                        </select>
+                        <span asp-validation-for="Module" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Priority" class="form-label"></label>
+                        <select asp-for="Priority" class="form-select">
+                            <option value="">Select Priority</option>
+                            <option value="Show Stopper">Show Stopper</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                        <span asp-validation-for="Priority" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label asp-for="UrlFormName" class="form-label"></label>
+                        <input asp-for="UrlFormName" class="form-control" />
+                        <span asp-validation-for="UrlFormName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check mt-4">
+                            <input asp-for="IsRecurring" class="form-check-input" type="checkbox" id="isRecurring" />
+                            <label asp-for="IsRecurring" class="form-check-label">Recurring Call</label>
+                        </div>
+                        <div id="recurringCallSection" style="display: none;" class="mt-2">
+                            <label asp-for="RecurringCallId" class="form-label"></label>
+                            <select asp-for="RecurringCallId" asp-items="Model.RecurringIncidents" class="form-select">
+                                <option value="">Select Reference Call</option>
+                            </select>
+                            <span asp-validation-for="RecurringCallId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label"></label>
+                    <input asp-for="Subject" class="form-control" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Suggestion" class="form-label"></label>
+                    <textarea asp-for="Suggestion" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Suggestion" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Attachments" class="form-label">Attachments</label>
+                    <input type="file" asp-for="Attachments" class="form-control" multiple />
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            $('#isRecurring').change(function() {
+                $('#recurringCallSection').toggle(this.checked);
+                if (!this.checked) {
+                    $('#RecurringCallId').val('');
+                }
+            });
+
+            // Show the section if IsRecurring is checked (e.g., when returning with validation errors)
+            if ($('#isRecurring').is(':checked')) {
+                $('#recurringCallSection').show();
+            }
+        });
+    </script>
+}

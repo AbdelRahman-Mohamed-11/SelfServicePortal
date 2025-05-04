@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SelfServicePortal.Core\SelfServicePortal.Core.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,8 +1,7 @@
-﻿using TicketingSystem.Core.Entities.Identity.Enums;
-using TicketingSystem.Core.Entities.Identity;
-using SelfServicePortal.Core.Entities.Identity.Enums;
+﻿using SelfServicePortal.Core.Entities.Identity.Enums;
+using SelfServicePortal.Core.Entities.Identity;
 
-namespace TicketingSystem.Core.Entities;
+namespace SelfServicePortal.Core.Entities;
 
 public class Incident(
        Guid loggedById,
@@ -40,7 +39,7 @@ public class Incident(
     public DateTime? DeliveryDate { get; private set; }
     public DateTime StatusUpdatedDate { get; private set; } = DateTime.UtcNow;
     public DateTime? ClosedDate { get; private set; }
-    
+
     public ApplicationUser LoggedBy { get; private set; } = default!;
     public ApplicationUser? AssignedTo { get; private set; }
     public Incident? RecurringCall { get; private set; }
@@ -53,7 +52,7 @@ public class Incident(
     public void SetCallRef()
     {
         var datePart = CreatedDate.ToString("yyyyMMdd");
-        var guidPart = Guid.NewGuid().ToString().Replace("-", "").Substring(28, 4).ToUpper(); 
+        var guidPart = Guid.NewGuid().ToString().Replace("-", "").Substring(28, 4).ToUpper();
         CallRef = $"INC-{datePart}-{guidPart}";
     }
 
@@ -93,6 +92,10 @@ public class Incident(
         StatusUpdatedDate = statusUpdatedDate;
     }
 
-    
+    public void AddAttachment(IncidentAttachment attachment)
+    {
+        _attachments.Add(attachment);
+    }
+
 
 }
