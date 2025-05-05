@@ -12,7 +12,7 @@
                 </div>
                 @if (comment.CanDelete)
                 {
-                    <button class="btn btn-sm btn-link text-danger" onclick="deleteComment('@comment.Id')">
+                    <button type="button" class="btn btn-sm btn-link text-danger" onclick="deleteComment('@comment.Id')">
                         <i class="bi bi-trash"></i>
                     </button>
                 }

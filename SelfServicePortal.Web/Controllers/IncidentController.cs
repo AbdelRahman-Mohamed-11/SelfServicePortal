@@ -12,29 +12,33 @@ using System.Security.Claims;
 namespace SelfServicePortal.Web.Controllers
 {
     [Authorize]
-    public class IncidentController : Controller
-    {
-        private readonly IIncidentService incidentService;
-        private readonly IUserService userService;
-        private readonly IWebHostEnvironment webHostEnvironment;
-
-        public IncidentController(
+    public class IncidentController(
             IIncidentService incidentService,
             IUserService userService,
-            IWebHostEnvironment webHostEnvironment)
-        {
-            this.incidentService = incidentService;
-            this.userService = userService;
-            this.webHostEnvironment = webHostEnvironment;
-        }
+            IAuthorizationService auth,
+            IWebHostEnvironment webHostEnvironment,
+            ILogger<IncidentController> logger
+        ) : Controller
+    {
+        private readonly IIncidentService _incidentService = incidentService;
+        private readonly IUserService _userService = userService;
+        private readonly IAuthorizationService _auth = auth;
+        private readonly IWebHostEnvironment _env = webHostEnvironment;
+        private readonly ILogger<IncidentController> _logger = logger;
 
         [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
-            var incident = await incidentService.GetIncidentByIdAsync(id);
-            if (incident == null)
-                return NotFound();
+            _logger.LogInformation("GET Details called for Incident {IncidentId}", id);
 
+            var incident = await _incidentService.GetIncidentByIdAsync(id);
+            if (incident == null)
+            {
+                _logger.LogWarning("Incident {IncidentId} not found", id);
+                return NotFound();
+            }
+
+            _logger.LogInformation("Loaded Incident {IncidentId}", id);
             var model = new IncidentDetailsViewModel
             {
                 Id = incident.Id,
@@ -61,20 +65,25 @@ namespace SelfServicePortal.Web.Controllers
                 }).ToList()
             };
 
+            _logger.LogInformation("Returning Details view for Incident {IncidentId}", id);
             return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            _logger.LogInformation("GET Create Incident page requested");
+
+            var recurring = await _incidentService.GetRecurringIncidentsAsync();
             var model = new CreateIncidentViewModel
             {
-                RecurringIncidents = (await incidentService.GetRecurringIncidentsAsync())
+                RecurringIncidents = recurring
                     .Select(i => new SelectListItem
                     {
                         Value = i.Id.ToString(),
                         Text = $"{i.CallRef} - {i.Subject}"
-                    }).ToList()
+                    })
+                    .ToList()
             };
 
             return View(model);
@@ -84,23 +93,30 @@ namespace SelfServicePortal.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateIncidentViewModel model)
         {
+            _logger.LogInformation("POST Create Incident attempt: {@Model}", model);
+
             if (!ModelState.IsValid)
             {
-                model.RecurringIncidents = (await incidentService.GetRecurringIncidentsAsync())
+                _logger.LogWarning("Create Incident model invalid");
+                model.RecurringIncidents = (await _incidentService.GetRecurringIncidentsAsync())
                     .Select(i => new SelectListItem
                     {
                         Value = i.Id.ToString(),
                         Text = $"{i.CallRef} - {i.Subject}"
-                    }).ToList();
-
+                    })
+                    .ToList();
                 return View(model);
             }
 
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
+            {
+                _logger.LogWarning("Create Incident attempted without authenticated user");
                 return Forbid();
+            }
 
             var loggedById = Guid.Parse(userIdClaim);
+            _logger.LogInformation("Authenticated as User {UserId}", loggedById);
 
             var incident = new Incident(
                 loggedById,
@@ -117,11 +133,12 @@ namespace SelfServicePortal.Web.Controllers
             );
 
             incident.SetCallRef();
-            await incidentService.CreateIncidentAsync(incident);
+            await _incidentService.CreateIncidentAsync(incident);
+            _logger.LogInformation("Created Incident {IncidentId}", incident.Id);
 
             if (model.Attachments != null && model.Attachments.Length > 0)
             {
-                var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
                 Directory.CreateDirectory(uploadsFolder);
 
                 foreach (var file in model.Attachments)
@@ -134,11 +151,17 @@ namespace SelfServicePortal.Web.Controllers
                         using var stream = new FileStream(filePath, FileMode.Create);
                         await file.CopyToAsync(stream);
 
-                        var attachment = new IncidentAttachment(incident.Id, file.FileName, $"/uploads/{fileName}", incident.LoggedById);
-
+                        _logger.LogInformation(
+                            "Saved attachment {FileName} for Incident {IncidentId}",
+                            fileName, incident.Id);
                     }
                 }
+
+                TempData["SuccessMessage"] = "Attachments uploaded successfully!";
             }
+
+
+            TempData["SuccessMessage"] = "Incident created successfully!";
 
             return RedirectToAction("Index", "Home");
         }
@@ -146,44 +169,55 @@ namespace SelfServicePortal.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(IncidentFilterViewModel filter)
         {
+            _logger.LogInformation("GET Index called with filter {@Filter}", filter);
+
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                _logger.LogWarning("Index attempted without authenticated user");
+                return Forbid();
+            }
+
+            var currentUserId = Guid.Parse(userIdClaim);
+            var isAdmin = User.IsInRole(Role.Admin.ToString());
+            var isERP = User.IsInRole(Role.ERP.ToString());
+            _logger.LogInformation(
+                "User {UserId} roles - Admin: {IsAdmin}, ERP: {IsERP}",
+                currentUserId, isAdmin, isERP);
+
             var model = new IncidentListViewModel
             {
                 Filter = filter,
-                Users = await userService.GetAllUsersAsSelectListAsync(),
+                Users = await _userService.GetAllUsersAsSelectListAsync(),
                 CallTypes = Enum.GetValues<CallType>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 Modules = Enum.GetValues<Module>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 Priorities = Enum.GetValues<Priority>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 SupportStatuses = Enum.GetValues<SupportStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 UserStatuses = Enum.GetValues<UserStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList()
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList()
             };
 
-            var (items, totalCount) = await incidentService.GetFilteredIncidentsAsync(filter.ToDto());
-            model.Incidents = new PaginatedList<IncidentDto>(items, totalCount, filter.PageNumber, filter.PageSize);
+            var (items, totalCount) = await _incidentService.GetFilteredIncidentsAsync(
+                filter.ToDto(),
+                currentUserId,
+                isAdmin,
+                isERP);
+
+            _logger.LogInformation(
+                "Fetched {Count} incidents out of {TotalCount}",
+                items.Count, totalCount);
+
+            model.Incidents = new PaginatedList<IncidentDto>(
+                items, totalCount, filter.PageNumber, filter.PageSize);
 
             return View(model);
         }
@@ -191,9 +225,14 @@ namespace SelfServicePortal.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var incident = await incidentService.GetIncidentByIdAsync(id);
+            _logger.LogInformation("GET Edit called for Incident {IncidentId}", id);
+
+            var incident = await _incidentService.GetIncidentByIdAsync(id);
             if (incident == null)
+            {
+                _logger.LogWarning("Incident {IncidentId} not found for Edit", id);
                 return NotFound();
+            }
 
             var model = new UpdateIncidentViewModel
             {
@@ -207,19 +246,13 @@ namespace SelfServicePortal.Web.Controllers
                 UserStatus = incident.UserStatus,
                 AssignedToId = incident.AssignedToId,
                 DeliveryDate = incident.DeliveryDate,
-                Users = await userService.GetAllUsersAsSelectListAsync(),
+                Users = await _userService.GetAllUsersAsSelectListAsync(),
                 SupportStatuses = Enum.GetValues<SupportStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 UserStatuses = Enum.GetValues<UserStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList(),
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList(),
                 Attachments = incident.Attachments.Select(a => new IncidentAttachmentViewModel
                 {
                     Id = a.Id,
@@ -235,55 +268,65 @@ namespace SelfServicePortal.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdateIncidentViewModel model, Guid[] attachmentsToRemove)
         {
+            _logger.LogInformation("POST Edit Incident {IncidentId}", model.Id);
+
             if (!ModelState.IsValid)
             {
-                model.Users = await userService.GetAllUsersAsSelectListAsync();
+                _logger.LogWarning("Edit model invalid for Incident {IncidentId}", model.Id);
+                model.Users = await _userService.GetAllUsersAsSelectListAsync();
                 model.SupportStatuses = Enum.GetValues<SupportStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList();
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList();
                 model.UserStatuses = Enum.GetValues<UserStatus>()
-                    .Select(e => new SelectListItem
-                    {
-                        Value = e.ToString(),
-                        Text = e.ToString()
-                    }).ToList();
+                    .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+                    .ToList();
                 return View(model);
             }
 
-            var incident = await incidentService.GetIncidentByIdAsync(model.Id);
+            var incident = await _incidentService.GetIncidentByIdAsync(model.Id);
             if (incident == null)
+            {
+                _logger.LogWarning("Incident {IncidentId} not found on Edit POST", model.Id);
                 return NotFound();
-
-            incident.SetSuggestion(model.Suggestion);
-            incident.SetUserStatus(model.UserStatus);
-            incident.SetSupportStatus(model.SupportStatus);
-            if (User.IsInRole("Admin"))
-            {
-                incident.SetAssignedTo(model.AssignedToId);
-            }
-            incident.SetDeliveryDate(model.DeliveryDate ?? DateTime.UtcNow);
-            incident.SetStatusUpdatedDate(DateTime.UtcNow);
-
-            if (model.SupportStatus == SupportStatus.Delivered)
-            {
-                incident.SetClosedDate(DateTime.UtcNow);
             }
 
-            // Handle attachment removals
+            var isNormalUser = User.IsInRole(nameof(Role.User));
+            if (isNormalUser)
+            {
+                incident.SetUserStatus(model.UserStatus);
+            }
+            else
+            {
+                incident.SetSuggestion(model.Suggestion);
+                incident.SetUserStatus(model.UserStatus);
+                incident.SetSupportStatus(model.SupportStatus);
+                if (User.IsInRole("Admin"))
+                {
+                    incident.SetAssignedTo(model.AssignedToId);
+                }
+                incident.SetDeliveryDate(model.DeliveryDate ?? DateTime.UtcNow);
+                incident.SetStatusUpdatedDate(DateTime.UtcNow);
+
+                if (model.SupportStatus == SupportStatus.Delivered)
+                {
+                    incident.SetClosedDate(DateTime.UtcNow);
+                }
+            }
+
             if (attachmentsToRemove != null && attachmentsToRemove.Length > 0)
             {
                 foreach (var attachmentId in attachmentsToRemove)
                 {
-                    await incidentService.RemoveAttachmentAsync(attachmentId);
+                    await _incidentService.RemoveAttachmentAsync(attachmentId);
+                    _logger.LogInformation(
+                        "Removed attachment {AttachmentId} from Incident {IncidentId}",
+                        attachmentId, model.Id);
                 }
             }
 
             if (model.NewAttachments != null && model.NewAttachments.Length > 0)
             {
-                var uploadsFolder = Path.Combine(webHostEnvironment.WebRootPath, "uploads");
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
                 Directory.CreateDirectory(uploadsFolder);
 
                 foreach (var file in model.NewAttachments)
@@ -295,14 +338,24 @@ namespace SelfServicePortal.Web.Controllers
 
                         using var stream = new FileStream(filePath, FileMode.Create);
                         await file.CopyToAsync(stream);
+                        _logger.LogInformation(
+                            "Added new attachment {FileName} to Incident {IncidentId}",
+                            fileName, model.Id);
 
-                        var attachment = new IncidentAttachment(incident.Id, file.FileName, $"/uploads/{fileName}", incident.LoggedById);
-                        await incidentService.AddAttachmentAsync(attachment);
+                        var attachment = new IncidentAttachment(
+                            incident.Id,
+                            file.FileName,
+                            $"/uploads/{fileName}",
+                            incident.LoggedById);
+                        await _incidentService.AddAttachmentAsync(attachment);
                     }
                 }
+
+                TempData["SuccessMessage"] = "New attachments added successfully!";
             }
 
-            await incidentService.UpdateIncidentAsync(incident);
+            await _incidentService.UpdateIncidentAsync(incident);
+            _logger.LogInformation("Updated Incident {IncidentId}", model.Id);
 
             return RedirectToAction(nameof(Index));
         }
@@ -311,15 +364,27 @@ namespace SelfServicePortal.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddComment(Guid id, string text)
         {
+            _logger.LogInformation("POST AddComment called for Incident {IncidentId}", id);
+
             if (string.IsNullOrWhiteSpace(text))
+            {
+                _logger.LogWarning(
+                    "AddComment received empty text for Incident {IncidentId}", id);
                 return BadRequest();
+            }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
+            {
+                _logger.LogWarning("AddComment attempted without authenticated user");
                 return Unauthorized();
+            }
 
-            await incidentService.AddCommentAsync(id, text, Guid.Parse(userId));
-            var comments = await incidentService.GetIncidentCommentsAsync(id);
+            await _incidentService.AddCommentAsync(id, text, Guid.Parse(userId));
+            _logger.LogInformation(
+                "Added comment by User {UserId} to Incident {IncidentId}", userId, id);
+
+            var comments = await _incidentService.GetIncidentCommentsAsync(id);
             var viewModel = comments.Select(c => new IncidentCommentViewModel
             {
                 Id = c.Id,
@@ -336,23 +401,37 @@ namespace SelfServicePortal.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteComment(Guid id, Guid commentId)
         {
+            _logger.LogInformation(
+                "POST DeleteComment {CommentId} on Incident {IncidentId}", commentId, id);
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
+            {
+                _logger.LogWarning("DeleteComment attempted without authenticated user");
                 return Unauthorized();
+            }
 
             try
             {
-                await incidentService.RemoveCommentAsync(commentId, Guid.Parse(userId));
+                await _incidentService.RemoveCommentAsync(commentId, Guid.Parse(userId));
+                _logger.LogInformation(
+                    "Deleted comment {CommentId} by User {UserId}", commentId, userId);
                 return Json(new { success = true });
             }
             catch (UnauthorizedAccessException)
             {
+                _logger.LogWarning(
+                    "Unauthorized delete attempt for Comment {CommentId} by User {UserId}",
+                    commentId, userId);
                 return Forbid();
             }
         }
+
         public async Task<IActionResult> GetComments(Guid id)
         {
-            var comments = await incidentService.GetIncidentCommentsAsync(id);
+            _logger.LogInformation("GET GetComments called for Incident {IncidentId}", id);
+
+            var comments = await _incidentService.GetIncidentCommentsAsync(id);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var viewModel = comments.Select(c => new IncidentCommentViewModel

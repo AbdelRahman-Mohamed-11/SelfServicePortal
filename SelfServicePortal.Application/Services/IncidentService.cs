@@ -29,39 +29,39 @@ public class IncidentService(ITicketDbContext context , IUserService userService
     }
 
     public async Task<(List<IncidentDto> Items, int TotalCount)> GetFilteredIncidentsAsync(
-        IncidentFilterDto filter)
+          IncidentFilterDto filter,
+          Guid currentUserId,
+          bool isAdmin,
+          bool isERP)
     {
         var query = context.Incidents
             .Include(i => i.LoggedBy)
             .Include(i => i.AssignedTo)
             .Where(i => !i.IsDeleted);
 
+        if (!isAdmin && !isERP)
+        {
+            query = query.Where(i => i.LoggedById == currentUserId);
+        }
+
         if (filter.CallType.HasValue)
             query = query.Where(i => i.CallType == filter.CallType);
-
         if (filter.Module.HasValue)
             query = query.Where(i => i.Module == filter.Module);
-
         if (filter.Priority.HasValue)
             query = query.Where(i => i.Priority == filter.Priority);
-
         if (filter.SupportStatus.HasValue)
             query = query.Where(i => i.SupportStatus == filter.SupportStatus);
-
         if (filter.UserStatus.HasValue)
             query = query.Where(i => i.UserStatus == filter.UserStatus);
-
         if (filter.AssignedToId.HasValue)
             query = query.Where(i => i.AssignedToId == filter.AssignedToId);
-
         if (filter.FromDate.HasValue)
             query = query.Where(i => i.CreatedDate >= filter.FromDate);
-
         if (filter.ToDate.HasValue)
             query = query.Where(i => i.CreatedDate <= filter.ToDate);
 
         var totalCount = await query.CountAsync();
-
         var items = await query
             .OrderByDescending(i => i.CreatedDate)
             .Skip((filter.PageNumber - 1) * filter.PageSize)
@@ -83,13 +83,12 @@ public class IncidentService(ITicketDbContext context , IUserService userService
                 ClosedDate = i.ClosedDate,
                 StatusUpdatedDate = i.StatusUpdatedDate,
                 UrlOrFormName = i.UrlOrFormName,
-                AssignedTo = i.AssignedTo != null ? i.AssignedTo.UserName : null
+                AssignedTo = i.AssignedTo != null? i.AssignedTo.UserName : ""
             })
             .ToListAsync();
 
         return (items, totalCount);
     }
-
     public async Task<Incident?> GetIncidentByIdAsync(Guid id)
     {
         return await context.Incidents

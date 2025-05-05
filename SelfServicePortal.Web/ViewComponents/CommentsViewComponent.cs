@@ -3,17 +3,8 @@ using SelfServicePortal.Core.Entities.Identity.Enums;
 using SelfServicePortal.Core.Interfaces;
 using System.Security.Claims;
 
-public class CommentsViewComponent : ViewComponent
+public class CommentsViewComponent(IIncidentService incidentService, IHttpContextAccessor httpContextAccessor) : ViewComponent
 {
-    private readonly IIncidentService incidentService;
-    private readonly IHttpContextAccessor httpContextAccessor;
-
-    public CommentsViewComponent(IIncidentService incidentService, IHttpContextAccessor httpContextAccessor)
-    {
-        this.incidentService = incidentService;
-        this.httpContextAccessor = httpContextAccessor;
-    }
-
     public async Task<IViewComponentResult> InvokeAsync(Guid incidentId, bool isReadOnly = false)
     {
         var comments = await incidentService.GetIncidentCommentsAsync(incidentId);

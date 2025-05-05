@@ -43,8 +43,8 @@ namespace SelfServicePortal.Infrastructure
 
         private static async Task SeedUsersAsync(UserManager<ApplicationUser> userManager)
         {
-            await SeedUserAsync(userManager, "admin", "admin@ticketing.local", "Admin123!@", nameof(Role.Admin));
-            await SeedUserAsync(userManager, "erpuser", "erp@ticketing.local", "ERPp123!@", nameof(Role.ERP));
+            await SeedUserAsync(userManager, "admin123", "admin@ticketing.local", "Admin123!@", nameof(Role.Admin));
+            await SeedUserAsync(userManager, "erpuser123", "erp@ticketing.local", "ERPp123!@", nameof(Role.ERP));
             await SeedUserAsync(userManager, "normaluser", "user@ticketing.local", "User123!@", nameof(Role.User));
         }
 

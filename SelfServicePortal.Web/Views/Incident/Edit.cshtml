@@ -1,6 +1,7 @@
 @model UpdateIncidentViewModel
 @{
     ViewData["Title"] = "Edit Incident";
+    var isNormalUser = User.IsInRole("User");
 }
 
 <div class="container-fluid mt-4">
@@ -32,7 +33,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label asp-for="Suggestion" class="form-label"></label>
-                            <textarea asp-for="Suggestion" class="form-control" rows="4"></textarea>
+                            <textarea asp-for="Suggestion" class="form-control" rows="4" readonly="@isNormalUser"></textarea>
                         </div>
                         <div class="mb-3">
                             <label asp-for="UserStatus" class="form-label"></label>
@@ -40,7 +41,7 @@
                         </div>
                         <div class="mb-3">
                             <label asp-for="SupportStatus" class="form-label"></label>
-                            <select asp-for="SupportStatus" asp-items="Model.SupportStatuses" class="form-select"></select>
+                            <select asp-for="SupportStatus" asp-items="Model.SupportStatuses" class="form-select" disabled="@isNormalUser"></select>
                         </div>
                         @if (User.IsInRole("Admin"))
                         {
@@ -51,36 +52,18 @@
                                 </select>
                             </div>
                         }
-                        <div class="mb-3">
-                            <label asp-for="DeliveryDate" class="form-label"></label>
-                            <input asp-for="DeliveryDate" type="date" class="form-control" />
-                        </div>
+
+                        @if (!isNormalUser)
+                        {
+                            <div class="mb-3">
+                                <label asp-for="DeliveryDate" class="form-label"></label>
+                                <input asp-for="DeliveryDate" type="date" class="form-control" readonly="@isNormalUser" />
+                            </div>
+                        }
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <h6>Current Attachments</h6>
-                    @if (Model.Attachments.Any())
-                    {
-                        <div class="list-group mb-3">
-                            @foreach (var attachment in Model.Attachments)
-                            {
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <input type="checkbox" name="AttachmentsToRemove" value="@attachment.Id" class="form-check-input me-2" />
-                                        <a href="@attachment.FilePath" target="_blank">@attachment.FileName</a>
-                                    </div>
-                                    <small class="text-muted">Check to remove</small>
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <p class="text-muted">No attachments</p>
-                    }
-                </div>
-
+                <!-- Attachments Section -->
                 @await Component.InvokeAsync("AttachmentUpload")
 
                 <!-- Comments Section -->

@@ -9,7 +9,10 @@ public interface IIncidentService
     Task<IEnumerable<Incident>> GetRecurringIncidentsAsync();
     Task AddAttachmentAsync(IncidentAttachment attachment);
     Task<(List<IncidentDto> Items, int TotalCount)> GetFilteredIncidentsAsync(
-        IncidentFilterDto filter);
+           IncidentFilterDto filter,
+           Guid currentUserId,
+           bool isAdmin,
+           bool isERP);
     Task<Incident?> GetIncidentByIdAsync(Guid id);
     Task RemoveAttachmentAsync(Guid attachmentId);
     Task UpdateIncidentAsync(Incident incident);

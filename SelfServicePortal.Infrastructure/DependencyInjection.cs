@@ -31,7 +31,6 @@ namespace SelfServicePortal.Infrastructure
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IIncidentService, IncidentService>();
             services.AddScoped<ITicketDbContext, TicketDbContext>();
 
             return services;
