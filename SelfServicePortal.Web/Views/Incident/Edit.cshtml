@@ -1,0 +1,98 @@
+@model UpdateIncidentViewModel
+@{
+    ViewData["Title"] = "Edit Incident";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Edit Incident - @Model.CallRef</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CallRef" />
+                <input type="hidden" asp-for="CreatedDate" />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Subject" class="form-label"></label>
+                            <input asp-for="Subject" class="form-control" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4" readonly></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="CreatedDate" class="form-label"></label>
+                            <input asp-for="CreatedDate" class="form-control" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Suggestion" class="form-label"></label>
+                            <textarea asp-for="Suggestion" class="form-control" rows="4"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="UserStatus" class="form-label"></label>
+                            <select asp-for="UserStatus" asp-items="Model.UserStatuses" class="form-select"></select>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="SupportStatus" class="form-label"></label>
+                            <select asp-for="SupportStatus" asp-items="Model.SupportStatuses" class="form-select"></select>
+                        </div>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <div class="mb-3">
+                                <label asp-for="AssignedToId" class="form-label"></label>
+                                <select asp-for="AssignedToId" asp-items="Model.Users" class="form-select">
+                                    <option value="">-- Select User --</option>
+                                </select>
+                            </div>
+                        }
+                        <div class="mb-3">
+                            <label asp-for="DeliveryDate" class="form-label"></label>
+                            <input asp-for="DeliveryDate" type="date" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6>Current Attachments</h6>
+                    @if (Model.Attachments.Any())
+                    {
+                        <div class="list-group mb-3">
+                            @foreach (var attachment in Model.Attachments)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <input type="checkbox" name="AttachmentsToRemove" value="@attachment.Id" class="form-check-input me-2" />
+                                        <a href="@attachment.FilePath" target="_blank">@attachment.FileName</a>
+                                    </div>
+                                    <small class="text-muted">Check to remove</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No attachments</p>
+                    }
+                </div>
+
+                @await Component.InvokeAsync("AttachmentUpload")
+
+                <!-- Comments Section -->
+                @await Component.InvokeAsync("Comments", new { incidentId = Model.Id })
+
+                <div class="text-end mt-4">
+                    <a asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+@model List<IncidentCommentViewModel>
+
+@if (Model.Any())
+{
+    @foreach (var comment in Model.OrderByDescending(c => c.CreatedDate))
+    {
+        <div class="comment mb-3 p-3 border rounded" id="comment-@comment.Id">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>@comment.CreatorName</strong>
+                    <small class="text-muted ms-2">@comment.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                </div>
+                @if (comment.CanDelete)
+                {
+                    <button class="btn btn-sm btn-link text-danger" onclick="deleteComment('@comment.Id')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                }
+            </div>
+            <div class="mt-2">
+                @comment.Text
+            </div>
+        </div>
+    }
+}
+else
+{
+    <p class="text-muted">No comments yet.</p>
+}

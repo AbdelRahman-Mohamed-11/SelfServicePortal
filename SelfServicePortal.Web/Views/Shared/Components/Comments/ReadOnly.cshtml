@@ -1,0 +1,30 @@
+@model List<IncidentCommentViewModel>
+
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-chat-dots"></i> Comments</h6>
+    </div>
+    <div class="card-body">
+        <div class="comments-section mb-3" style="max-height: 400px; overflow-y: auto;">
+            @if (Model.Any())
+            {
+                @foreach (var comment in Model.OrderByDescending(c => c.CreatedDate))
+                {
+                    <div class="comment mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>@comment.CreatorName</strong>
+                                <small class="text-muted ms-2">@comment.CreatedDate.ToString("yyyy-MM-dd HH:mm")</small>
+                            </div>
+                        </div>
+                        <div class="mt-2">@comment.Text</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted">No comments yet</p>
+            }
+        </div>
+    </div>
+</div>

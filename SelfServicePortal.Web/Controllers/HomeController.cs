@@ -1,32 +1,31 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using SelfServicePortal.Core.DTOs;
+using SelfServicePortal.Core.Interfaces;
 using SelfServicePortal.Web.Models;
 
 namespace SelfServicePortal.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(
+        ILogger<HomeController> logger,
+        IIncidentService incidentService) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        public async Task<IActionResult> Index()
         {
-            _logger = logger;
-        }
+            var filter = new IncidentFilterDto
+            {
+                PageNumber = 1,
+                PageSize = 10
+            };
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+            var (items, totalCount) = await incidentService.GetFilteredIncidentsAsync(filter);
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+            var model = new IncidentListViewModel
+            {
+                Incidents = new PaginatedList<IncidentDto>(items, totalCount, filter.PageNumber, filter.PageSize)
+            };
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(model);
         }
     }
 }

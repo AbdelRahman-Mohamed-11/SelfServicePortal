@@ -120,12 +120,10 @@
                 }
             });
 
-            // Show the section if IsRecurring is checked (e.g., when returning with validation errors)
             if ($('#isRecurring').is(':checked')) {
                 $('#recurringCallSection').show();
             }
 
-            // File upload handling
             $('#fileInput').change(function() {
                 const files = this.files;
                 const fileInfo = $('#fileInfo');
