@@ -1,6 +1,7 @@
 ﻿@model IncidentListViewModel
 @{
     ViewData["Title"] = "Home";
+    var isNormalUser = User.IsInRole("User");
 }
 
 <div class="container-fluid mt-4">
@@ -34,6 +35,7 @@
         </div>
     </div>
 
+    @if (!isNormalUser){
     <div class="row">
         <div class="col-md-8 mb-4">
             <div class="card shadow-sm">
@@ -91,4 +93,5 @@
         </div>
 
     </div>
+    }
 </div>
