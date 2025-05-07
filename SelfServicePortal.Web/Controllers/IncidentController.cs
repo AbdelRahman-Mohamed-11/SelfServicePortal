@@ -188,7 +188,9 @@ namespace SelfServicePortal.Web.Controllers
             var model = new IncidentListViewModel
             {
                 Filter = filter,
-                Users = await _userService.GetAllUsersAsSelectListAsync(),
+                Users = isAdmin
+                    ? await _userService.GetUsersInRoleAsSelectListAsync(Role.ERP.ToString())
+                    : new List<SelectListItem>(),
                 CallTypes = Enum.GetValues<CallType>()
                     .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
                     .ToList(),
@@ -246,7 +248,7 @@ namespace SelfServicePortal.Web.Controllers
                 UserStatus = incident.UserStatus,
                 AssignedToId = incident.AssignedToId,
                 DeliveryDate = incident.DeliveryDate,
-                Users = await _userService.GetAllUsersAsSelectListAsync(),
+                Users = await _userService.GetUsersInRoleAsSelectListAsync(Role.ERP.ToString()),
                 SupportStatuses = Enum.GetValues<SupportStatus>()
                     .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
                     .ToList(),
@@ -273,7 +275,7 @@ namespace SelfServicePortal.Web.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Edit model invalid for Incident {IncidentId}", model.Id);
-                model.Users = await _userService.GetAllUsersAsSelectListAsync();
+                model.Users = await _userService.GetUsersInRoleAsSelectListAsync(Role.ERP.ToString());
                 model.SupportStatuses = Enum.GetValues<SupportStatus>()
                     .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
                     .ToList();

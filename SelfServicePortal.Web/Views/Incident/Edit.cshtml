@@ -1,7 +1,8 @@
 @model UpdateIncidentViewModel
 @{
     ViewData["Title"] = "Edit Incident";
-    var isNormalUser = User.IsInRole("User");
+    var isNormalUser = User.IsInRole(nameof(Role.User));
+    var isAdmin = User.IsInRole(nameof(Role.Admin));
 }
 
 <div class="container-fluid mt-4">
@@ -43,7 +44,7 @@
                             <label asp-for="SupportStatus" class="form-label"></label>
                             <select asp-for="SupportStatus" asp-items="Model.SupportStatuses" class="form-select" disabled="@isNormalUser"></select>
                         </div>
-                        @if (User.IsInRole("Admin"))
+                        @if (User.IsInRole(nameof(isAdmin)))
                         {
                             <div class="mb-3">
                                 <label asp-for="AssignedToId" class="form-label"></label>
@@ -63,11 +64,25 @@
                     </div>
                 </div>
 
-                <!-- Attachments Section -->
+                @if (Model.Attachments != null && Model.Attachments.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Current Attachments</label>
+                        <ul class="list-group">
+                            @foreach (var attachment in Model.Attachments)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="@attachment.FilePath" target="_blank">@attachment.FileName</a>
+                                    <div>
+                                        <input type="checkbox" name="attachmentsToRemove" value="@attachment.Id" id="remove_@attachment.Id" />
+                                        <label for="remove_@attachment.Id" class="text-danger ms-2">Remove</label>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
                 @await Component.InvokeAsync("AttachmentUpload")
-
-                <!-- Comments Section -->
-                @await Component.InvokeAsync("Comments", new { incidentId = Model.Id })
 
                 <div class="text-end mt-4">
                     <a asp-action="Index" class="btn btn-secondary me-2">Cancel</a>
@@ -77,5 +92,9 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <div class="mt-4">
+        @await Component.InvokeAsync("Comments", new { incidentId = Model.Id })
     </div>
 </div>

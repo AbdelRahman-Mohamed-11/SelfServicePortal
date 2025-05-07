@@ -1,5 +1,9 @@
 @model IncidentListViewModel
 
+@{
+    var isAdmin = User.IsInRole("Admin");
+}
+
 <div class="container-fluid mt-4">
     <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -89,7 +93,9 @@
                             <th>Closed Date</th>
                             <th>Status Updated</th>
                             <th>URL/Form Name</th>
-                            <th>Assigned To</th>
+                            @if (isAdmin) {
+                                <th>Assigned To</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
@@ -120,7 +126,10 @@
                                 <td>@(incident.ClosedDate?.ToString("yyyy-MM-dd"))</td>
                                 <td>@incident.StatusUpdatedDate.ToString("yyyy-MM-dd")</td>
                                 <td>@incident.UrlOrFormName</td>
-                                <td>@(incident.AssignedTo ?? "-")</td>
+                                @if (isAdmin)
+                                {
+                                    <td>@(incident.AssignedTo ?? "")</td>
+                                }
                             </tr>
                         }
                     </tbody>

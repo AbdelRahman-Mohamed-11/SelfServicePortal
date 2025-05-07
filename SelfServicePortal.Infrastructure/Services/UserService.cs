@@ -48,4 +48,15 @@ public class UserService(Microsoft.AspNetCore.Identity.UserManager<ApplicationUs
 
         return isAdmin;
     }
+
+    public async Task<List<SelectListItem>> GetUsersInRoleAsSelectListAsync(string roleName)
+    {
+        logger.LogInformation($"Loading users in role {roleName} as SelectList");
+        var usersInRole = await userManager.GetUsersInRoleAsync(roleName);
+        return usersInRole.Select(u => new SelectListItem
+        {
+            Value = u.Id.ToString(),
+            Text = u.UserName
+        }).ToList();
+    }
 }
